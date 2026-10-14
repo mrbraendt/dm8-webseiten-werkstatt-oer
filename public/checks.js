@@ -179,7 +179,9 @@ const W = (() => {
   const PREVIEW_SCRIPT = `<script>document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a");if(!a)return;var h=a.getAttribute("href")||"";if(h.charAt(0)==="#"){e.preventDefault();var t=document.getElementById(h.slice(1));if(t)t.scrollIntoView({behavior:"smooth"});return;}if(/^https?:/i.test(h)){e.preventDefault();window.open(h,"_blank","noopener");}});addEventListener("scroll",function(){parent.postMessage({ww:"scroll",y:scrollY},"*");});addEventListener("message",function(e){if(e.data&&e.data.ww==="restore")scrollTo(0,e.data.y);});<\/script>`;
   const XRAY = `<style id="xray">*{outline:1px dashed rgba(225,29,72,.55)!important;outline-offset:-1px}div,section,header,footer,main,nav,article,aside{outline:2px solid rgba(37,99,235,.7)!important;background-image:linear-gradient(rgba(37,99,235,.05),rgba(37,99,235,.05))!important}</style>`;
   function previewDoc(html, css, opts = {}) {
-    let h = html || "";
+    // JavaScript wird in der Werkstatt nicht gelehrt: <script> aus Schülercode entfernen, damit eine
+    // Endlosschleife die Vorschau (und damit den Editor-Tab) nicht einfrieren kann. Nur Vorschau, Code bleibt unverändert.
+    let h = (html || "").replace(/<script\b[\s\S]*?(<\/script\s*>|$)/gi, "");
     const style = opts.noCss ? "" : `<style>${(css || "").replace(/<\/style/gi, "<\\/style")}</style>`;
     const extra = (opts.xray ? XRAY : "") + PREVIEW_SCRIPT + (opts.base ? `<base href="${opts.base}">` : "");
     if (/<html|<!doctype/i.test(h)) {

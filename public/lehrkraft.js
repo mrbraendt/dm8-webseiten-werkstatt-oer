@@ -62,7 +62,7 @@
   function render() {
     $("#t-table").innerHTML = `<tr><th>Name</th><th>Zuletzt</th><th>Stationen</th><th>Profi</th><th>Fehler</th><th>K1–K7</th><th>K8 Erklären (×2)</th><th>K9 Eindruck</th><th>Note</th><th></th></tr>` +
       (list.map((s, i) => `<tr>
-        <td><b>${esc(s.nick)}</b>${s.fails >= 10 ? ' <span class="chip err">gesperrt</span>' : ""}</td>
+        <td><b>${esc(s.nick)}</b>${s.fails >= 3 ? ` <span class="chip err" title="Falsche PIN-Eingaben in Folge; wächst die Wartezeit. PIN zurücksetzen hebt sie auf.">PIN ${s.fails}× falsch</span>` : ""}${s.share ? ' <span class="chip" title="Öffentlicher Freigabe-Link aktiv">🔗</span>' : ""}</td>
         <td>${time(s.updated_at)}</td>
         <td>${s.a.stationen}/16</td>
         <td>${s.a.profi ? "⭐".repeat(s.a.profi) : "–"}</td>
@@ -121,7 +121,7 @@
             <input id="d-ov" placeholder="z. B. 2−" value="${esc((r.override || {}).note || "")}" style="width:80px;padding:6px;border-radius:8px;border:1px solid var(--line)">
             <input id="d-ovg" placeholder="Begründung" value="${esc((r.override || {}).grund || "")}" style="width:70%;padding:6px;border-radius:8px;border:1px solid var(--line)"></p>
           <div class="dlg-actions" style="justify-content:space-between">
-            <span><button class="btn small" id="d-pin">🔑 PIN zurücksetzen</button> <button class="btn small danger" id="d-del">🗑 Löschen</button></span>
+            <span><button class="btn small" id="d-pin">🔑 PIN zurücksetzen</button> ${s.share ? '<button class="btn small" id="d-unshare">🔗 Freigabe entziehen</button> ' : ""}<button class="btn small danger" id="d-del">🗑 Löschen</button></span>
             <span><button class="btn" id="d-close">Schließen</button> <button class="btn primary" id="d-save">Speichern</button></span>
           </div>
         </div>
@@ -142,6 +142,11 @@
       const pin = prompt(`Neue vierstellige PIN für „${s.nick}“:`);
       if (!pin) return;
       try { await api("/api/t/pin", { kurs, nick: s.nick_key, pin }); toast("🔑 PIN geändert"); load(); } catch (e) { alert(e.message); }
+    };
+    const un = $("#d-unshare");
+    if (un) un.onclick = async () => {
+      if (!confirm(`Öffentlichen Freigabe-Link von „${s.nick}“ entziehen? Das Konto bleibt bestehen; die Schülerin/der Schüler kann später neu freigeben.`)) return;
+      try { await api("/api/t/unshare", { kurs, nick: s.nick_key }); toast("🔗 Freigabe entzogen"); $("#dlg").close(); load(); } catch (e) { alert(e.message); }
     };
     $("#d-del").onclick = async () => {
       if (prompt(`Wirklich ALLES von „${s.nick}“ löschen? Zum Bestätigen den Namen eintippen:`) !== s.nick) return;

@@ -121,9 +121,18 @@
     $("#detective").onclick = () => { const l = $("#detective-list"); l.hidden = !l.hidden; $("#detective").setAttribute("aria-expanded", String(!l.hidden)); };
     $("#logout").onclick = async () => { await save(true); sessionStorage.removeItem("ww-session"); location.reload(); };
     document.addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); save(true); } });
+    // Beim Verlassen/Ausblenden (Tab-Wechsel, Fenster zu, Handy sperren) noch schnell sichern.
+    // keepalive-Anfragen überleben das Schließen der Seite (Browser-Grenze ca. 64 KB; sonst bleibt die lokale Sicherung).
+    const flush = () => {
+      if (!dirty || !me) return;
+      try { localStorage.setItem(backupKey(), JSON.stringify({ t: Date.now(), ...files })); } catch (e) {}
+      try { fetch("/api/save", { method: "POST", keepalive: true, headers: { "content-type": "application/json" }, body: JSON.stringify({ ...me, ...files, progress }) }).catch(() => {}); } catch (e) {}
+    };
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") flush(); });
+    window.addEventListener("pagehide", flush);
     window.addEventListener("beforeunload", e => {
       if (!dirty) return;
-      fetch("/api/save", { method: "POST", keepalive: true, headers: { "content-type": "application/json" }, body: JSON.stringify({ ...me, ...files, progress }) });
+      flush();
       e.preventDefault(); e.returnValue = "";
     });
     window.addEventListener("message", e => {
