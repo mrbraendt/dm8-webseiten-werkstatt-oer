@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Webseiten-Werkstatt</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠️</text></svg>">
+  <link rel="stylesheet" href="vendor/codemirror/codemirror.min.css">
+  <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+  <!-- Anmeldung -->
+  <div id="login" class="login">
+    <div class="login-card">
+      <div class="login-logo">🛠️</div>
+      <h1>Webseiten-Werkstatt</h1>
+      <p class="muted">Hier baust du Woche für Woche deine eigene Webseite – mit HTML und CSS.</p>
+      <div class="mode" role="tablist">
+        <button type="button" id="m-new" class="on">🆕 Ich bin neu</button>
+        <button type="button" id="m-old">🔑 Ich habe schon ein Konto</button>
+      </div>
+      <form id="login-form" autocomplete="off">
+        <label>Klasse <input id="l-kurs" required placeholder="z. B. 8d"></label>
+        <label>Vorname <input id="l-nick" required maxlength="20" placeholder="z. B. Lena"></label>
+        <label><span id="l-pin-lbl">Denk dir eine PIN aus (4 Ziffern)</span> <input id="l-pin" required inputmode="numeric" pattern="\d{4}" maxlength="4" type="password" placeholder="••••"></label>
+        <label id="l-pin2-wrap">PIN noch einmal <input id="l-pin2" inputmode="numeric" pattern="\d{4}" maxlength="4" type="password" placeholder="••••"></label>
+        <button type="submit" class="btn primary" id="l-go">Konto anlegen</button>
+        <p class="login-msg" id="l-msg" role="alert"></p>
+      </form>
+      <div class="login-hint">✍️ Trag deinen <b>Vornamen</b> ein – gibt es ihn in deiner Klasse schon, hänge den ersten Buchstaben deines Nachnamens an (z. B. „Lena M.“).<br>🔒 Merk dir deine <b>PIN</b> gut – ohne sie kommst du nicht mehr an deine Seite.</div>
+    </div>
+  </div>
+
+  <!-- Werkstatt -->
+  <div id="app" hidden>
+    <header class="bar">
+      <div class="namebadge" id="me-name" title="Webseiten-Werkstatt"></div>
+      <div class="st-nav">
+        <button class="icon-btn" id="st-prev" title="Vorherige Station">‹</button>
+        <button class="st-pick" id="st-pick"></button>
+        <button class="icon-btn" id="st-next" title="Nächste Station">›</button>
+      </div>
+      <nav class="views">
+        <button data-view="station" class="on">📘 Station</button>
+        <button data-view="map">🗺️ Übersicht</button>
+        <button data-view="note">🎓 Meine Note</button>
+        <button data-view="spick">📚 Spickzettel</button>
+        <button data-view="tasten">⌨️ Tasten</button>
+      </nav>
+      <div class="me">
+                <span class="save" id="save-state"></span>
+        <button class="btn small" id="logout">Abmelden</button>
+      </div>
+    </header>
+
+    <div class="split" id="split">
+      <section class="learn" id="learn"></section>
+      <section class="work">
+        <div class="work-bar">
+          <div class="files">
+            <button data-file="html" class="on">📄 index.html</button>
+            <button data-file="css" hidden>🎨 style.css</button>
+          </div>
+          <div class="tools">
+            <button id="t-xray" title="Zeigt alle Boxen deiner Seite" hidden>🔍 Röntgenblick</button>
+            <button id="t-share" title="Deine Seite auf Handy oder iPad ansehen">📱 Auf Handy/iPad ansehen</button>
+            <button id="t-big" title="Vorschau groß anzeigen">⤢ Groß</button>
+            <div class="more"><button id="t-more" title="Weitere Werkzeuge">⋯</button>
+              <div class="more-menu" id="more-menu" hidden>
+                <button id="t-versions">🕘 Ältere Versionen</button>
+                <button id="t-download">⬇️ Seite herunterladen</button>
+                <button id="t-import">📥 Code aus CodePen übernehmen</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="editor" id="editor"></div>
+        <button class="detective" id="detective" aria-expanded="false"></button>
+        <div class="detective-list" id="detective-list" hidden></div>
+        <div class="preview-wrap">
+          <div class="preview-bar"><span>👁️ So sieht deine Seite aus</span><span class="pv-title" id="pv-title"></span></div>
+          <iframe id="preview" title="Vorschau deiner Seite" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"></iframe>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <dialog id="dlg"><div id="dlg-body"></div></dialog>
+  <div class="toast" id="toast" role="status"></div>
+
+  <script src="vendor/codemirror/codemirror.min.js"></script>
+  <script src="vendor/codemirror/mode/xml/xml.min.js"></script>
+  <script src="vendor/codemirror/mode/javascript/javascript.min.js"></script>
+  <script src="vendor/codemirror/mode/css/css.min.js"></script>
+  <script src="vendor/codemirror/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="vendor/codemirror/addon/edit/closetag.min.js"></script>
+  <script src="vendor/codemirror/addon/edit/closebrackets.min.js"></script>
+  <script src="vendor/codemirror/addon/fold/xml-fold.min.js"></script>
+  <script src="vendor/codemirror/addon/edit/matchtags.min.js"></script>
+  <script src="vendor/codemirror/addon/selection/active-line.min.js"></script>
+  <script src="vendor/qrcode.min.js"></script>
+  <script src="checks.js?v=3"></script>
+  <script src="stations.js?v=3"></script>
+  <script src="app.js?v=5"></script>
+</body>
+</html>
